@@ -1,0 +1,23 @@
+{
+  "name": "graphtorio-api",
+  "version": "1.0.0",
+  "description": "REST API for the graphtorio project",
+  "main": "src/main/js/server.js",
+  "scripts": {
+    "test": "mocha \"src/main/test/**/*.js\" --exit",
+    "dev": "nodemon src/main/js/server.js"
+  },
+  "author": "Maxime Choffat <maxime.choffat@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "chai-http": "^3.0.0",
+    "express": "^4.16.2",
+    "mongoose": "^5.0.9"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^5.0.4",
+    "nodemon": "^1.17.1"
+  }
+}
