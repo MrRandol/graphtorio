@@ -3,6 +3,5 @@ var ItemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   label: { type: String, required: true }
 });
-mongoose.model('Item', ItemSchema);
 
-module.exports = mongoose.model('Item');
+module.exports = mongoose.model('Item', ItemSchema);

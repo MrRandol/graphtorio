@@ -8,16 +8,14 @@ var should = chai.should();
 var expect = chai.expect;
 chai.use(chaiHttp);
 
+var factories = require('../utils/factories');
 var server = require('../../js/app');
-
 var Item = require('../../js/item/Item')
 
 describe('ITEM CONTROLLER', function() {
 
   beforeEach(function(done) {
-    Item.collection.drop(() => {
-      Item.ensureIndexes(done)
-    });
+    mongoose.connection.dropDatabase(done);
   });
 
   it('should list no item on /items GET if db is empty', function(done) {
@@ -33,12 +31,10 @@ describe('ITEM CONTROLLER', function() {
   });
 
   it('should list ALL items on /items GET', function(done) {
-    let item1 = {name: "item1", label: "item1"};
-    let item2 = {name: "item2", label: "item2"};
-    Item.create(item1)
-    .then(() => {
-      Item.create(item2)
-    })
+    Item.create(factories.validItem())
+    .then(
+      () => {Item.create(factories.validItem())}
+    )
     .then(() => {
       chai.request(server)
       .get('/items')
@@ -53,10 +49,10 @@ describe('ITEM CONTROLLER', function() {
   });
 
   it('should add a SINGLE item on /items POST', function(done) {
-    let item1 = {name: "item1", label: "item1"};
+    let item = factories.validItem();
     chai.request(server)
     .post('/items')
-    .send(item1)
+    .send(item)
     .end(function(err, res){
       res.should.have.status(200);
       res.should.be.json;
@@ -66,8 +62,8 @@ describe('ITEM CONTROLLER', function() {
       res.body.should.have.property('label');
       res.body.should.have.property('_id');
 
-      res.body.name.should.equal(item1.name);
-      res.body.label.should.equal(item1.label);
+      res.body.name.should.equal(item.name);
+      res.body.label.should.equal(item.label);
       done();
     });
   });
