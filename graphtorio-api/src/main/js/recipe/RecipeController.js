@@ -5,19 +5,6 @@ router.use(bodyParser.json());
 
 var Recipe = require('./Recipe');
 
-router.post('/', function (req, res) {
-  Recipe.create(
-  {
-    name : req.body.name,
-    ingredients: req.body.ingredients
-  }, 
-  function (err, recipe) {
-    if (err) return res.status(500).send("There was a problem adding the information to the database." + err);
-    res.status(200).send(recipe);
-  }
-  );
-});
-
 router.get('/', function (req, res) {
   Recipe.find({}).populate('ingredients').exec(function (err, recipes) {
     if (err) return res.status(500).send("There was a problem finding the recipes.");
@@ -31,6 +18,20 @@ router.get('/:id', function (req, res) {
     if (!recipe) return res.status(404).send("No recipe found.");
     res.status(200).send(recipe);
   });
+});
+
+router.post('/', function (req, res) {
+  Recipe.create(
+  {
+    name : req.body.name,
+    label : req.body.label,
+    ingredients: req.body.ingredients
+  }, 
+  function (err, recipe) {
+    if (err) return res.status(500).send("There was a problem adding the information to the database." + err);
+    res.status(200).send(recipe);
+  }
+  );
 });
 
 router.delete('/:id', function (req, res) {
