@@ -71,7 +71,6 @@ describe('RECIPE CONTROLLER', function() {
     .post('/recipes')
     .send(recipe)
     .end(function(err, res){
-      console.log(err)
       res.should.have.status(200);
       res.should.be.json;
       res.body.should.be.a('object');
