@@ -5,15 +5,21 @@
   "main": "src/main/js/server.js",
   "scripts": {
     "test": "mocha \"src/main/test/**/*.js\" --exit",
-    "dev": "nodemon src/main/js/server.js"
+    "dev": "nodemon --ignore headless src/main/js/server.js"
   },
   "author": "Maxime Choffat <maxime.choffat@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "asciiart-logo": "^0.1.7",
     "body-parser": "^1.18.2",
     "chai-http": "^3.0.0",
+    "decompress": "^4.2.0",
+    "decompress-tarxz": "^2.1.1",
     "express": "^4.16.2",
-    "mongoose": "^5.0.9"
+    "lodash": "^4.17.5",
+    "logplease": "^1.2.14",
+    "mongoose": "^5.0.9",
+    "neo4j-driver": "^1.5.3"
   },
   "devDependencies": {
     "chai": "^4.1.2",
