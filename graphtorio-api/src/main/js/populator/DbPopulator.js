@@ -13,13 +13,13 @@ function insertObjects(objects) {
     return null
   }
   let object = objects.shift()
-  let label = _.chain(object.type).camelCase().upperFirst()
+  let label = "Item"//_.chain(object.type).camelCase().upperFirst()
   const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("graphtorio", "graphtorio"));
   const session = driver.session();
   let requestSubString = ''
   let requestParams = {}
   for ( let key of _.keys(object) ) {
-    if ( key !== 'type' && (_.isNumber(object[key]) || _.isString(object[key])) ) {
+    if ( _.isNumber(object[key]) || _.isString(object[key]) ) {
       requestSubString += key +': $' + key + ','
       requestParams[key] = object[key]
     }
