@@ -1,60 +1,34 @@
-var _ = require('lodash');
+var _ = require('lodash')
 var express = require('express')
 var router = express.Router()
-var decompress = require('decompress');
-var decompressTarxz = require('decompress-tarxz');
+var decompress = require('decompress')
+var decompressTarxz = require('decompress-tarxz')
 
+const config = require('../config').populator
 const logger = require('../utils/logger').create('PopulateController')
 var Parser = require('./Parser')
 var DbPopulator = require('./DbPopulator')
 var HeadlessFetcher = require('./HeadlessFetcher')
 
-const FACTORIO_VERSION = "0.16.35"
-
-const EXTRACT_PATH = '.\\headless\\' + FACTORIO_VERSION + '\\extract\\'
-const OBJECTS_FILES_TO_PARSE = [
-  'factorio\\data\\base\\prototypes\\item\\ammo.lua',
-  'factorio\\data\\base\\prototypes\\item\\armor.lua',
-  'factorio\\data\\base\\prototypes\\item\\capsule.lua',
-  'factorio\\data\\base\\prototypes\\item\\demo-ammo.lua',
-  'factorio\\data\\base\\prototypes\\item\\demo-armor.lua',
-  'factorio\\data\\base\\prototypes\\item\\demo-gun.lua',
-  'factorio\\data\\base\\prototypes\\item\\demo-item.lua',
-  'factorio\\data\\base\\prototypes\\item\\demo-item-groups.lua',
-  'factorio\\data\\base\\prototypes\\item\\demo-mining-tools.lua',
-  'factorio\\data\\base\\prototypes\\item\\demo-turret.lua',
-  'factorio\\data\\base\\prototypes\\item\\equipment.lua',
-  'factorio\\data\\base\\prototypes\\item\\gun.lua',
-  'factorio\\data\\base\\prototypes\\item\\item.lua',
-  'factorio\\data\\base\\prototypes\\item\\mining-tools.lua',
-  'factorio\\data\\base\\prototypes\\item\\module.lua',
-  'factorio\\data\\base\\prototypes\\item\\turret.lua',
-  'factorio\\data\\base\\prototypes\\equipment\\equipment.lua',
-  'factorio\\data\\base\\prototypes\\fluid\\demo-fluid.lua',
-  'factorio\\data\\base\\prototypes\\fluid\\fluid.lua'
-]
-
-const RECIPES_FILES_TO_PARSE = [
-  'factorio\\data\\base\\prototypes\\recipe\\ammo.lua',
-  'factorio\\data\\base\\prototypes\\recipe\\capsule.lua',
-  'factorio\\data\\base\\prototypes\\recipe\\demo-furnace-recipe.lua',
-  'factorio\\data\\base\\prototypes\\recipe\\demo-recipe.lua',
-  'factorio\\data\\base\\prototypes\\recipe\\demo-turret.lua',
-  'factorio\\data\\base\\prototypes\\recipe\\equipment.lua',
-  'factorio\\data\\base\\prototypes\\recipe\\fluid-recipe.lua',
-  'factorio\\data\\base\\prototypes\\recipe\\furnace-recipe.lua',
-  'factorio\\data\\base\\prototypes\\recipe\\inserter.lua',
-  'factorio\\data\\base\\prototypes\\recipe\\module.lua',
-  'factorio\\data\\base\\prototypes\\recipe\\recipe.lua',
-  'factorio\\data\\base\\prototypes\\recipe\\turret.lua'
-]
+const EXTRACT_PATH = config.extract_path
+const OBJECTS_FILES_TO_PARSE = config.objects_files_to_parse
+const RECIPES_FILES_TO_PARSE = config.recipes_files_to_parse
 
 router.post('/', function (req, res) {
   logger.info("===========================================")
   logger.info("=          FACTORIO DATA PARSING          =")
   logger.info("===========================================")
-  logger.info("> STEP 1 : Download headless binary for version %s", FACTORIO_VERSION)
-  HeadlessFetcher.downloadHeadless(FACTORIO_VERSION)
+
+  if ( !req.body ) {
+    throw("This endpoint requires parameters (TODO : see doc)")
+  }
+  var factorio_version = req.body.version
+  if ( !factorio_version || factorio_version.trim() === "" ) {
+    throw("Parameter version is mandatory")
+  }
+
+  logger.info("> STEP 1 : Download headless binary for version %s", factorio_version)
+  HeadlessFetcher.downloadHeadless(factorio_version)
 
   .then((filename) => { 
     logger.info("> STEP 2 : Extract archive data")

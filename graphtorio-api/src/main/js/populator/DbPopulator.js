@@ -3,8 +3,9 @@ var _ = require('lodash');
 const logger = require('../utils/logger').create('DBPopulator')
 
 function addObjects(objects){
-  logger.debug("Starting Inserts")
+  logger.debug("Starting objects inserts")
   return insertObjects(objects)
+  logger.debug("Objects inserts done")
 }
 
 function insertObjects(objects) {
@@ -44,9 +45,9 @@ function insertObjects(objects) {
 }
 
 function addRecipes(recipes){
-  logger.debug("Starting Inserts")
+  logger.debug("Starting recipes inserts")
   return insertRecipes(recipes)
-  logger.debug("Inserts done !")
+  logger.debug("Recipes inserts done !")
 }
 
 function insertRecipes(recipes) {
