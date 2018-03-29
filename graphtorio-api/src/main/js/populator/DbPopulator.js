@@ -13,7 +13,7 @@ function insertObjects(objects) {
   }
   let object = objects.shift()
   let label = _.chain(object.type).camelCase().upperFirst()
-  const driver = neo4j.driver("bolt://localhost", neo4j.auth.basic("graphtorio", "graphtorio"));
+  const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("graphtorio", "graphtorio"));
   const session = driver.session();
   let requestSubString = ''
   let requestParams = {}
@@ -109,7 +109,7 @@ function createRelationships1N(recipe, result, _ingredients) {
 
   logger.debug("Creating relation between %s(%s) and %s(%s)", result_name, result_amount, ingredient.name, ingredient.amount)
   //logger.debug("Still to insert : %s", JSON.stringify(ingredients))
-  const driver = neo4j.driver("bolt://localhost", neo4j.auth.basic("graphtorio", "graphtorio"));
+  const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("graphtorio", "graphtorio"));
   const session = driver.session();
   let request = "MATCH (a),(b) " +
     "WHERE a.name = '" + result_name +"' AND b.name = '" + ingredient.name + "'" +

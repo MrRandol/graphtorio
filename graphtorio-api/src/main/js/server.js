@@ -1,25 +1,21 @@
-var app = require('./app');
-var port = process.env.PORT || 3000;
-
 const logo = require('asciiart-logo');
 
+const config = require('./config')
+var app = require('./app');
 
-var server = app.listen(port, function() {
-
+var server = app.listen(config.app.port, function() {
   console.log(
     logo({
       name: 'Graphtorio',
-      font: 'univers',
+      font: 'speed',//'univers',
       lineChars: 15,
       padding: 5,
       margin: 2
     })
     .emptyLine()
-    .right("Listening on port " + port)
+    .right("Listening on port " + config.app.port)
     .emptyLine()
     .wrap('Ready to Automate the world !')
     .render()
   );
-
-  //console.log('[' + process.env.NODE_ENV + '] Express server listening on port ' + port);
 });
