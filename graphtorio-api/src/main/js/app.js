@@ -10,8 +10,12 @@ const logger = require('./utils/logger').create('app')
 =============================================== */
 
 // TODO : handle protection (backend ? reverseproxy ?)
-var populateController = require('./populator/populateController');
 logger.debug("Adding Route /populate")
-app.use('/populate', populateController);
+var populateController = require('./populator/populateController');
+app.use('/populate', populateController)
+
+logger.debug("Adding Route /api")
+var graphQLController = require('./graphQL/graphQLController');
+app.use('/api', graphQLController)
 
 module.exports = app;
