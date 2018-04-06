@@ -3,6 +3,7 @@ var express = require('express')
 var router = express.Router()
 var decompress = require('decompress')
 var decompressTarxz = require('decompress-tarxz')
+var path = require('path')
 
 const config = require('../config').populator
 const logger = require('../utils/logger').create('PopulateController')
@@ -50,7 +51,7 @@ router.post('/', function (req, res) {
     logger.debug("\tWe have %s file(s) to parse", length)
     for (let file of OBJECTS_FILES_TO_PARSE) {
       logger.info("\t[%s/%s] %s ", counter, length, file)
-      temp = await Parser.readFile(EXTRACT_PATH+"\\"+file)
+      temp = await Parser.readFile(path.resolve(EXTRACT_PATH, file))
       logger.debug(`\tParsed : %s item(s) `, temp.length)
       objects = _.concat(objects, temp)
       counter++
@@ -74,7 +75,7 @@ router.post('/', function (req, res) {
     logger.debug("\tWe have %s file(s) to parse", length)
     for (let file of RECIPES_FILES_TO_PARSE) {
       logger.info("\t[%s/%s] %s ", counter, length, file)
-      temp = await Parser.readFile(EXTRACT_PATH+"\\"+file)
+      temp = await Parser.readFile(path.resolve(EXTRACT_PATH, file))
       logger.debug(`\tParsed : %s recipe(s) `, temp.length)
       recipes = _.concat(recipes, temp)
       counter++

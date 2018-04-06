@@ -15,7 +15,7 @@ var server = app.listen(config.app.port, function() {
     .emptyLine()
     .right("Listening on port " + config.app.port)
     .emptyLine()
-    .wrap('Ready to Automate the world !')
+    .wrap('Ready to Automate the world automation !')
     .render()
   );
 });
