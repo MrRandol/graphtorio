@@ -6,7 +6,15 @@ var dbController = require('./Neo4JController')
 // Construct a schema, using GraphQL schema language
 var schema = buildSchema(`
   type Query {
-    item(name: String!): Item
+    item_recipe(name: String!): ItemRecipe
+  }
+
+  type ItemRecipe {
+    items: [Item],
+    ingredients: [Item],
+    recipes: [Recipe],
+    produces: [craftLink],
+    consumes: [craftLink]
   }
 
   type Item {
@@ -16,12 +24,27 @@ var schema = buildSchema(`
     type: String,
     icon: String
   }
+
+  type Recipe {
+    id: ID,
+    name: String,
+    energy_normal: String,
+    energy_expensive: String
+  }
+
+  type craftLink {
+    id: ID,
+    amount: Int,
+    cost: String,
+    start: ID,
+    end: ID
+  }
 `)
 
 // The root provides a resolver function for each API endpoint
 var root = {
-  item: function ({name}) {
-    return dbController.getItem(name)
+  item_recipe: function ({name}) {
+    return dbController.getItemRecipe(name)
     .then((result) => {
 
       console.log("RESULT : %s", JSON.stringify(result))

@@ -10,7 +10,6 @@ const config = {
     type:     "Neo4J",
     host:     defaultEnvValue("db_host")     || 'bolt://localhost',
     port:     defaultEnvValue("db_port")     || 7687,
-    name:     defaultEnvValue("db_name")     || 'graphtorio',
     user:     defaultEnvValue("db_user")     || 'graphtorio',
     password: defaultEnvValue("db_password") || 'graphtorio'
   },

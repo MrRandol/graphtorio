@@ -5,7 +5,8 @@
   "main": "src/main/js/server.js",
   "scripts": {
     "test": "mocha \"src/main/test/**/*.js\" --exit",
-    "dev": "nodemon --ignore headless src/main/js/server.js"
+    "dev": "nodemon --ignore headless src/main/js/server.js",
+    "debug": "node --inspect src/main/js/server.js"
   },
   "author": "Maxime Choffat <maxime.choffat@gmail.com>",
   "license": "MIT",

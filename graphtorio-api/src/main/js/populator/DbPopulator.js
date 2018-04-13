@@ -2,52 +2,49 @@ const neo4j = require('neo4j-driver').v1;
 var _ = require('lodash');
 const logger = require('../utils/logger').create('DBPopulator')
 
-function addObjects(objects){
-  logger.debug("Starting objects inserts")
-  return insertObjects(objects)
-  logger.debug("Objects inserts done")
+const config = require('../config').db
+const db_url = config.host + ':' + config.port
+const db_user = config.user
+const db_password = config.password
+
+/***************************
+            ITEMS
+***************************/
+function addItems(items){
+  logger.debug("Starting items inserts (%s)", items.length)
+  return insertItems(items, 1)
 }
 
-function insertObjects(objects) {
-  if (!objects ||objects.length == 0) {
+function insertItems(items, count) {
+  if ( !items || items.length == 0 ) {
     return null
   }
-  let object = objects.shift()
-  let label = "Item"//_.chain(object.type).camelCase().upperFirst()
-  const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("graphtorio", "graphtorio"));
+
+  let item = items.shift()
+  const driver = neo4j.driver(db_url, neo4j.auth.basic(db_user, db_password));
   const session = driver.session();
-  let requestSubString = ''
-  let requestParams = {}
-  for ( let key of _.keys(object) ) {
-    if ( _.isNumber(object[key]) || _.isString(object[key]) ) {
-      requestSubString += key +': $' + key + ','
-      requestParams[key] = object[key]
-    }
-  }
-  requestSubString = _.truncate(requestSubString, {'length': requestSubString.length - 1, 'omission': ''})
-  logger.debug("Creating object %s in label %s", object.name, label)
-  let request = 'CREATE (:' + label + ' {' + requestSubString + '})'
-  //console.log("Making request : " + request)
-  //console.log(JSON.stringify(requestParams))
-  return session.run( request, requestParams)
+
+  let request = 'CREATE (:Item ' + paramsToString(item) + ')'
+  //console.log("REQUEST : %s", request)
+  //console.log("REQUEST PARAMS : %s", JSON.stringify(requestParams))
+  return session.run( request, item )
   .then(result => {
     session.close()
     driver.close()
-    return insertObjects(objects)
+    return insertItems(items, count+1)
   })
   .catch(error => {
-    logger.error("Error while creating Node")
-    logger.error("\t\t---------------- STACK START ----------------")
-    console.log(error)
-    logger.error("\t\t---------------- STACK END ----------------")
+    logger.error("Error while creating item Node")
     throw(error)
   });
 }
 
+/***************************
+          RECIPES
+***************************/
 function addRecipes(recipes){
   logger.debug("Starting recipes inserts")
   return insertRecipes(recipes)
-  logger.debug("Recipes inserts done !")
 }
 
 function insertRecipes(recipes) {
@@ -55,23 +52,169 @@ function insertRecipes(recipes) {
     return null
   }
   let recipe = recipes.shift()
-  let ingredients = recipe.normal ? recipe.normal.ingredients : recipe.ingredients
-  return insertOneRecipe(recipe, ingredients)
+  return insertOneRecipe(recipe)
   .then(() => {
     return insertRecipes(recipes)
   })
 }
 
-function insertOneRecipe(recipe, ingredients) {
-  var result = recipe.normal ? recipe.normal.result : recipe.result
-  if ( !result ) {
-    result = recipe.normal ? recipe.normal.results : recipe.results
+function insertOneRecipe(recipe) {
+  const driver = neo4j.driver(db_url, neo4j.auth.basic(db_user, db_password));
+  const session = driver.session();
+
+  var energy_normal = 0.5
+  if (recipe.normal && recipe.normal.energy_required)
+    energy_normal = recipe.normal.energy_required
+  else if (recipe.energy_required)
+    energy_normal = recipe.energy_required
+  var energy_expensive = energy_normal
+  if (recipe.expensive && recipe.expensive.energy_required)
+    energy_expensive = recipe.expensive.energy_required
+
+  let params = {
+    name: recipe.name,
+    energy_normal: energy_normal,
+    energy_expensive: energy_expensive
   }
-  if ( !_.isArray(result) ) {
-    result = [result]
-  }
-  return createRelationshipsNN(recipe, result, ingredients)
+  let request = "CREATE (:Recipe " + paramsToString(params) + ")"
+
+  return session.run( request, params )
+  .then(result => {
+    session.close()
+    driver.close()
+    return result
+  })
+  .then(() => {
+    //Link product(s)
+    var r = recipe.normal ? recipe.normal : recipe
+    if ( r.result ) {
+      insertOneResult(recipe.name, r.result, r.result_count)
+    } else if ( r.results ) {
+      insertMultipleResults(recipe.name, r.results)
+    } else {
+      throw ("Recipe has no resulting product !")
+    }
+  })
+  .then(() => {
+    //link ingredient(s)
+    var r = recipe.normal ? recipe.normal : recipe
+    insertMultipleIngredients(recipe.name, r.ingredients)
+  })
+  .catch(error => {
+    logger.error("Error while creating recipe Node")
+    throw(error)
+  });
 }
+
+function insertMultipleResults(recipeName, results) {
+  if ( !results || results.length === 0 ){
+    return null
+  }
+  var result = results.shift()
+  return insertOneResult(recipeName, result.name, result.amount)
+  .then(() => {
+    return insertMultipleResults(recipeName, results)
+  })
+}
+
+function insertOneResult(recipeName, resultName, amount) {
+  const driver = neo4j.driver(db_url, neo4j.auth.basic(db_user, db_password));
+  const session = driver.session();
+
+  let request = "MATCH (a:Recipe),(b:Item) " +
+    "WHERE a.name = '" + recipeName +"' AND b.name = '" + resultName + "'" +
+    "CREATE (a)-[r:PRODUCES {" +
+      "amount: " + (amount || 1) + ", " + 
+      "cost: 'normal'" +
+    "}]->(b)" +
+    "RETURN a, b"
+
+  return session.run( request )
+  .then(result => {
+    session.close()
+    driver.close()
+    return result
+  })
+}
+
+function insertMultipleIngredients(recipeName, ingredients) {
+  if ( !ingredients || ingredients.length === 0 ){
+    return null
+  }
+  var ingredient = ingredients.shift()
+  return insertOneIngredient(recipeName, ingredient.name, ingredient.amount)
+  .then(() => {
+    return insertMultipleIngredients(recipeName, ingredients)
+  })
+}
+
+function insertOneIngredient(recipeName, ingredientName, amount) {
+  const driver = neo4j.driver(db_url, neo4j.auth.basic(db_user, db_password));
+  const session = driver.session();
+
+  if (!amount) {
+    logger.warn("Ingredient %s from recipe %s is undefined. Default to 1.", ingredientName, recipeName)
+  }
+
+  let request = "MATCH (a:Recipe),(b:Item) " +
+    "WHERE a.name = '" + recipeName +"' AND b.name = '" + ingredientName + "'" +
+    "CREATE (a)-[r:CONSUMES {" +
+      "amount: " + (amount || 1) + ", " + 
+      "cost: 'normal'" +
+    "}]->(b)" +
+    "RETURN a, b"
+
+  return session.run( request )
+  .then(result => {
+    session.close()
+    driver.close()
+    return result
+  })
+}
+
+function paramsToString(p) {
+  var requestString = '{'
+  var keys =  _.keys(p)
+  var params = {}
+
+  if ( !keys || keys.length === 0 ) {
+    return ''
+  } 
+
+  for ( let key of keys ) {
+    var value = p[key]
+    if ( _.isNumber(value) || _.isString(value) ) {
+      requestString += key +': $' + key + ','
+      params[key] = value
+    }
+  }
+
+  requestString = _.truncate(requestString, {'length': requestString.length - 1, 'omission': ''})
+  requestString += '}'
+
+  return requestString
+}
+
+
+module.exports = {
+  addItems,
+  addRecipes
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function createRelationshipsNN(recipe, results, ingredients) {
   if ( !results || results.length <= 0 ) {
@@ -140,7 +283,3 @@ function createRelationships1N(recipe, result, _ingredients) {
   });
 }
 
-module.exports = {
-  addObjects,
-  addRecipes
-}

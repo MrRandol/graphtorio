@@ -196,6 +196,10 @@ function parseSubObject(inputString) {
     } else if (split0 === "flags") {
       //logger.debug("    Key is flags parsing as array anyway")
       value = getObjectsWithoutWrapper(bracketsRemoved)
+    } else if (split0 === "icons") {
+      logger.debug("    Key is icons, we don't care (for now) and return empty icon")
+      split0 = "icon"
+      value = ""
     } else {
       //logger.debug("    Sub object value is a simple object")
       value = parseObject(bracketsRemoved)

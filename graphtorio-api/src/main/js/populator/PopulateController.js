@@ -28,7 +28,7 @@ router.post('/', function (req, res) {
     throw("Parameter version is mandatory")
   }
 
-  logger.info("> STEP 1 : Download headless binary for version %s", factorio_version)
+ /* logger.info("> STEP 1 : Download headless binary for version %s", factorio_version)
   HeadlessFetcher.downloadHeadless(factorio_version)
 
   .then((filename) => { 
@@ -40,11 +40,12 @@ router.post('/', function (req, res) {
         decompressTarxz()
       ]
     })
-  })
+  })*/
 
-  .then(async function() {
+  //.then(async function() {
+  new Promise (async (resolve, reject) => {
     logger.info("> STEP 3 : Parse items definitions")
-    var objects = []
+    var items = []
     var length = OBJECTS_FILES_TO_PARSE.length
     var counter = 1
     var temp
@@ -53,17 +54,18 @@ router.post('/', function (req, res) {
       logger.info("\t[%s/%s] %s ", counter, length, file)
       temp = await Parser.readFile(path.resolve(EXTRACT_PATH, file))
       logger.debug(`\tParsed : %s item(s) `, temp.length)
-      objects = _.concat(objects, temp)
+      items = _.concat(items, temp)
       counter++
     }
     logger.info("\tFinished parsing items files")
-    logger.debug("Got a total of %s objects", objects.length)
-    return objects
+    logger.info("Got a total of %s items", items.length)
+    //return items
+    resolve(items)
   })
 
-  .then(function(objects) {
-    logger.info("> STEP 4 : Insert objects into database")
-    return DbPopulator.addObjects(objects)
+  .then(function(items) {
+    logger.info("> STEP 4 : Insert items into database")
+    return DbPopulator.addItems(items)
   })
 
   .then(async function() {
@@ -81,7 +83,7 @@ router.post('/', function (req, res) {
       counter++
     }
     logger.info("\tFinished parsing recipes files")
-    logger.debug("Got a total of %s objects", recipes.length)
+    logger.info("Got a total of %s recipes", recipes.length)
     return recipes
   })
 
